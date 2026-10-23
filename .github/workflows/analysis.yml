@@ -1,0 +1,33 @@
+name: Match analysis
+
+on:
+  schedule:
+    - cron: "0 7 * * *"
+  workflow_dispatch:
+    inputs:
+      matches:
+        description: "Matches separated by semicolon, e.g. Arsenal vs Chelsea; Barcelona vs Real Madrid"
+        required: false
+        type: string
+
+jobs:
+  analyse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests
+      - uses: actions/cache@v4
+        with:
+          path: cache
+          key: fd-cache-${{ github.run_id }}
+          restore-keys: fd-cache-
+      - run: python daily_report.py
+        env:
+          FOOTBALL_DATA_KEY: ${{ secrets.FOOTBALL_DATA_KEY }}
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          MATCHES: ${{ github.event.inputs.matches }}
